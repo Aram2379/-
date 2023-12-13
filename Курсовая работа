@@ -1,0 +1,87 @@
+import threading
+import time
+from pymongo import MongoClient
+class MongoClient:
+    def __init__(self):
+        self.client = MongoClient('mongodb://localhost:27017')
+        self.db = self.client['Python']
+        self.coffees_collection = self.db['tastecoll']
+
+    def load_coffees(self):
+
+        self.coffees_collection.insert_many([
+            {'name': 'espresso', 'price': 2.5},
+            {'name': 'cappuccino', 'price': 3.0},
+            {'name': 'latte', 'price': 3.5},
+            {'name': 'americano', 'price': 2.0},
+            {'name': 'ice latte', 'price': 4.0},
+            {'name': 'raf', 'price': 2.0},
+            {'name': 'turkish coffee', 'price': 1.5},
+            {'name': 'irish coffe', 'price': 2.3}
+        ])
+class CoffeeMachine:
+    def __init__(self):
+        self.available_coffees = {
+            'espresso': 2.5,
+            'cappuccino': 3.0,
+            'latte': 3.5,
+            'ice latte': 4.0,
+            'americano': 2.0,
+            'raf': 2.0,
+            'turkish coffe': 1.5,
+            'irish coffe': 2.3,
+
+        }
+        self.lock = threading.Lock()
+        print('Меню:')
+        for u in self.available_coffees:
+            print(u)
+            print('__________')
+
+
+
+
+    def make_coffee(self, coffee_name):
+        coffee_name = input()
+        with self.lock:
+            if coffee_name.lower() in self.available_coffees:
+                price = self.available_coffees[coffee_name.lower()]
+                print(f"Готовлю {coffee_name}. Цена: {price} $.")
+                time.sleep(2)  # имитация приготовления кофе
+                print(f"{coffee_name} готов! Возьмите ваш кофе.")
+            else:
+                print(f"Извините, {coffee_name} не доступен в меню.")
+
+class Customer(threading.Thread):
+    def __init__(self, coffee_machine, name, coffee_name):
+        super().__init__()
+        self.coffee_machine = coffee_machine
+        self.name = name
+        self.coffee_name = coffee_name
+
+    def run(self):
+        print(f"{self.name} зашел в кофейню.")
+        self.coffee_machine.make_coffee(self.coffee_name)
+        print(f"{self.name} покидает кофейню.")
+
+def main():
+    coffee_machine = CoffeeMachine()
+
+
+    customers = [
+        Customer(coffee_machine, "Клиент 1", ''),
+        Customer(coffee_machine, "Клиент 2", ''),
+        Customer(coffee_machine, "Клиент 3", ''),
+        Customer(coffee_machine, "Клиент 4", '')
+    ]
+
+
+    for customer in customers:
+        customer.start()
+
+
+    for customer in customers:
+        customer.join()
+
+if __name__ == "__main__":
+    main()
